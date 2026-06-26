@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NTT DATA — AI Presentation Generator</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="/static/assets/ntt_logo_blue.png" type="image/png">
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-logo">
+    <img src="/static/assets/ntt_logo_white.png" alt="NTT DATA">
+  </div>
+  <div class="header-divider"></div>
+  <span class="header-app-name">AI Presentation Generator</span>
+    <div class="header-right">
+    <div class="powered-badge">
+      <div class="claude-dot"></div>
+      Powered by Groq
+    </div>
+  </div>
+</header>
+
+<main class="main-container">
+
+  <!-- Step tabs (2 steps) -->
+  <div class="step-nav-bar">
+    <div class="step-tab active" id="tab-0" onclick="goStep(0)">① Essentials</div>
+    <div class="step-tab" id="tab-1" onclick="goStep(1)">② Preferences <span class="optional-badge">optional</span></div>
+  </div>
+
+  <!-- ── STEP 0 — ESSENTIALS ───────────────────────────────────────────── -->
+  <div class="step-panel active" id="step-panel-0">
+
+    <div class="card">
+      <div class="section-label">Presentation Basics</div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label" for="topic">
+          Presentation Topic <span class="req">*</span>
+        </label>
+        <input type="text" id="topic"
+          placeholder="e.g., SAP BTP, Generative AI, S/4HANA Migration, Microsoft Fabric">
+      </div>
+
+      <div class="form-grid grid-2" style="margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label" for="objective">Objective <span class="req">*</span></label>
+          <select id="objective" onchange="handleCustom('objective','objectiveCustom')">
+            <option value="">Select objective...</option>
+            <option>Inform / Educate</option>
+            <option>Executive Overview</option>
+            <option>Client Proposal</option>
+            <option>Project Update</option>
+            <option>Technical Deep Dive</option>
+            <option>Knowledge Transfer (KT)</option>
+            <option>Training Session</option>
+            <option>Workshop</option>
+            <option>Solution Architecture</option>
+            <option>Business Case</option>
+            <option>Proof of Concept (POC)</option>
+            <option>Status Report</option>
+            <option>Investment Proposal</option>
+            <option value="custom">Custom...</option>
+          </select>
+          <div class="custom-field" id="objectiveCustom">
+            <input type="text" id="objectiveCustomText" placeholder="Describe your objective">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="audience">Target Audience <span class="req">*</span></label>
+          <select id="audience" onchange="handleCustom('audience','audienceCustom')">
+            <option value="">Select audience...</option>
+            <option>Executives / Leadership</option>
+            <option>Business Stakeholders</option>
+            <option>Clients / Customers</option>
+            <option>Project Managers</option>
+            <option>Developers</option>
+            <option>Architects</option>
+            <option>Technical Team</option>
+            <option>SAP Consultants</option>
+            <option>Functional Consultants</option>
+            <option>Data Engineers / Data Scientists</option>
+            <option>AI/ML Engineers</option>
+            <option>Mixed Audience</option>
+            <option value="custom">Custom...</option>
+          </select>
+          <div class="custom-field" id="audienceCustom">
+            <input type="text" id="audienceCustomText" placeholder="Describe your audience">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid grid-2">
+        <div class="form-group">
+          <label class="form-label" for="duration">Presentation Duration <span class="req">*</span></label>
+          <select id="duration" onchange="updateSlideCount()">
+            <option value="">Select duration...</option>
+            <option value="5 Minutes|5-7">5 Minutes</option>
+            <option value="10 Minutes|8-10">10 Minutes</option>
+            <option value="15 Minutes|12-15">15 Minutes</option>
+            <option value="20 Minutes|15-18">20 Minutes</option>
+            <option value="30 Minutes|20-25">30 Minutes</option>
+            <option value="45 Minutes|28-35">45 Minutes</option>
+            <option value="60 Minutes|35-45">60 Minutes</option>
+          </select>
+          <div class="slide-pill" id="slidePill">
+            📊 Estimated: <span id="slideCountText">–</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Presentation Theme <span class="req">*</span></label>
+          <div class="theme-group">
+            <div class="theme-option selected" id="theme-light" onclick="selectTheme('light')">
+              <div class="theme-preview light">Aa</div>
+              <div>
+                <div style="font-weight:600;font-size:13px">Light</div>
+                <div style="font-size:11px;color:var(--ntt-muted)">White bg</div>
+              </div>
+              <div class="theme-radio-dot"></div>
+            </div>
+            <div class="theme-option" id="theme-dark" onclick="selectTheme('dark')">
+              <div class="theme-preview dark">Aa</div>
+              <div>
+                <div style="font-weight:600;font-size:13px">Dark</div>
+                <div style="font-size:11px;color:var(--ntt-muted)">Black bg</div>
+              </div>
+              <div class="theme-radio-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-next" onclick="goStep(1)">Preferences (optional) →</button>
+      <button class="btn-generate-direct" id="quickGenBtn" onclick="generatePresentation()">
+        <span id="quickGenText">⚡ Generate Now</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 1 — PREFERENCES (OPTIONAL) ─────────────────────────────── -->
+  <div class="step-panel" id="step-panel-1">
+
+    <div class="card">
+      <div class="section-label">Presenter &amp; Depth</div>
+      <div class="form-grid grid-3">
+        <div class="form-group">
+          <label class="form-label" for="techLevel">Technical Level</label>
+          <select id="techLevel">
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option selected>Advanced</option>
+            <option>Expert</option>
+            <option>Executive (Non-Technical)</option>
+            <option>Mixed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="presenterType">Presenter Type</label>
+          <select id="presenterType">
+            <option>Technical Consultant</option>
+            <option>Business Consultant</option>
+            <option>Solution Architect</option>
+            <option>Project Manager</option>
+            <option>Sales Executive</option>
+            <option>Delivery Manager</option>
+            <option>Business Analyst</option>
+            <option>Executive / CXO</option>
+            <option>Trainer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="language">Output Language</label>
+          <select id="language">
+            <option>English</option>
+            <option>German</option>
+            <option>French</option>
+            <option>Spanish</option>
+            <option>Japanese</option>
+            <option>Hindi</option>
+            <option>Telugu</option>
+            <option>Tamil</option>
+            <option>Chinese</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="toggle-row">
+          <label class="form-label" style="margin-bottom:0">Speaker Notes</label>
+          <label class="toggle">
+            <input type="checkbox" id="speakerNotes">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+          <span class="toggle-label">Generate presenter notes for each slide</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Sections to Include <span style="font-weight:400;color:var(--ntt-muted);font-size:11px;text-transform:none;letter-spacing:0">(AI will intelligently select if none chosen)</span></div>
+      <div class="chip-group" id="sectionChips">
+        <div class="chip selected" onclick="toggleChip(this)" data-value="Agenda">Agenda</div>
+        <div class="chip selected" onclick="toggleChip(this)" data-value="Executive Summary">Executive Summary</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Problem Statement">Problem Statement</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Current Challenges">Current Challenges</div>
+        <div class="chip selected" onclick="toggleChip(this)" data-value="Proposed Solution">Proposed Solution</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Architecture">Architecture</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Workflow">Workflow</div>
+        <div class="chip selected" onclick="toggleChip(this)" data-value="Features">Features</div>
+        <div class="chip selected" onclick="toggleChip(this)" data-value="Benefits">Benefits</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Advantages">Advantages</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Limitations">Limitations</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Comparison">Comparison</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Best Practices">Best Practices</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Timeline / Roadmap">Timeline / Roadmap</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Cost Analysis">Cost Analysis</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Risks">Risks</div>
+        <div class="chip" onclick="toggleChip(this)" data-value="Future Enhancements">Future Enhancements</div>
+        <div class="chip selected" onclick="toggleChip(this)" data-value="Q&amp;A / Thank You">Q&amp;A / Thank You</div>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button class="btn-back" onclick="goStep(0)">← Back to Essentials</button>
+      <button class="btn-generate-direct" id="generateBtn" onclick="generatePresentation()">
+        <span id="genBtnText">✦ Generate NTT DATA Presentation</span>
+      </button>
+    </div>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <!-- Progress -->
+    <div class="progress-area" id="progressArea">
+      <div class="progress-label">Building your presentation…</div>
+      <div class="progress-track">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="status-steps" id="statusSteps"></div>
+    </div>
+  </div>
+
+  <!-- Error (step 0 level) -->
+  <div class="error-banner" id="errorBanner0"></div>
+
+  <!-- Progress (step 0 level for quick generate) -->
+  <div class="progress-area" id="progressArea0">
+    <div class="progress-label">Building your presentation…</div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar0"></div>
+    </div>
+    <div class="status-steps" id="statusSteps0"></div>
+  </div>
+
+</main>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

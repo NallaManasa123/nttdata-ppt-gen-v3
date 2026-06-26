@@ -1,0 +1,46 @@
+# Virtual environments (do not commit)
+maa/
+envv/
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.pyc
+
+# Development generator scripts (not part of the app)
+gen_*.py
+analyze_*.py
+extract_*.py
+gen_logo_b64.py
+write_pptx_builder.py
+
+# Test output files
+test_*.pptx
+*.pptx
+
+# Environment variables (contains API keys)
+nttdata-ppt-gen/.env
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Temporary analysis assets
+nttdata-ppt-gen/frontend/static/assets/*.wmf
+nttdata-ppt-gen/frontend/static/assets/layout*
+nttdata-ppt-gen/frontend/static/assets/new_*
+nttdata-ppt-gen/frontend/static/assets/content_*
+nttdata-ppt-gen/frontend/static/assets/closing_*
+nttdata-ppt-gen/frontend/static/assets/master*
+nttdata-ppt-gen/frontend/static/assets/extracted_*

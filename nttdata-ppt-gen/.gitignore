@@ -1,0 +1,38 @@
+# Virtual environments
+envv/
+maa/
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.pyc
+
+# Environment variables (contains API keys — NEVER commit this)
+.env
+
+# Test output files
+test_*.pptx
+*.pptx
+
+# Extracted template analysis assets (not needed for app)
+frontend/static/assets/*.wmf
+frontend/static/assets/layout*
+frontend/static/assets/new_*
+frontend/static/assets/content_*
+frontend/static/assets/closing_*
+frontend/static/assets/master*
+frontend/static/assets/extracted_*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Windows
+Thumbs.db
+desktop.ini
