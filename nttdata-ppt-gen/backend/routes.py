@@ -32,11 +32,9 @@ def _parse_config(config: dict) -> dict:
         config["audience"] = config.get("audienceCustomText", "Mixed Audience")
 
     # Map frontend field names to what the LLM expects
-    config["tech_level"]     = config.get("techLevel",     "Intermediate")
-    config["presenter_type"] = config.get("presenterType", "Technical Consultant")
-    config["speaker_notes"]  = bool(config.get("speakerNotes", False))
-    config["sections"]       = config.get("sections",      [])
-    config["language"]       = config.get("language",      "English")
+    config["tech_level"]    = config.get("techLevel",    "Intermediate")
+    config["speaker_notes"] = bool(config.get("speakerNotes", False))
+    config["language"]      = config.get("language",     "English")
     config["theme"]          = config.get("theme",         "light")
     config["visuals"]        = config.get("visuals",       ["Automatically Decide"])
 

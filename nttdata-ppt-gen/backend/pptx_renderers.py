@@ -17,7 +17,9 @@ def _render_process_flow(sl, data, al, at, aw, ah, theme):
     sub_c = RGBColor(0xCC, 0xDD, 0xFF)
     if data.get("direction", "horizontal") == "horizontal":
         bw = min(Inches(2.3), (aw - Inches(0.18) * (n - 1)) / max(n, 1))
-        bh = Inches(1.65); gap = (aw - bw * n) / max(n - 1, 1); by = at + (ah - bh) / 2
+        bh = min(Inches(1.9), ah - Inches(0.4))
+        gap = (aw - bw * n) / max(n - 1, 1)
+        by = at + (ah - bh) * 0.25
         for i, s in enumerate(steps):
             x = al + i * (bw + gap); col = _col(s.get("color", "blue"))
             if i > 0: _arrow(sl, x - gap + Inches(0.05), by + bh / 2, x - Inches(0.05), by + bh / 2)
@@ -30,6 +32,29 @@ def _render_process_flow(sl, data, al, at, aw, ah, theme):
             if s.get("description",""):
                 _txt(sl, s["description"], x+Inches(0.07), by+Inches(0.58), bw-Inches(0.14), Inches(0.95),
                      size=9, color=sub_c, align=PP_ALIGN.CENTER, wrap=True)
+        # Insight bar — stretches to fill remaining space
+        insight = data.get("insight", "")
+        if insight:
+            bar_y = by + bh + Inches(0.15)
+            bar_h = max(Inches(0.48), (at + ah) - bar_y - Inches(0.05))
+            if bar_h > Inches(0.3):
+                bar_col = RGBColor(0x1A, 0x2A, 0x50) if theme == "dark" else RGBColor(0xE8, 0xF2, 0xFF)
+                txt_col = C_WHITE if theme == "dark" else C_BLUE
+                _rrect(sl, al, bar_y, aw, bar_h, bar_col, rad=0.05)
+                # Main insight text
+                _txt(sl, f"★  {insight}", al + Inches(0.2), bar_y + Inches(0.1),
+                     aw - Inches(0.4), Inches(0.36),
+                     size=11, bold=True, color=txt_col)
+                # Step summary line below if space allows
+                if bar_h > Inches(0.8):
+                    step_labels = [s.get("label", "") for s in steps]
+                    if step_labels:
+                        summary = "  →  ".join(step_labels)
+                        sub_col = RGBColor(0xAA, 0xBB, 0xDD) if theme == "dark" else RGBColor(0x44, 0x66, 0x99)
+                        _txt(sl, summary,
+                             al + Inches(0.2), bar_y + Inches(0.52),
+                             aw - Inches(0.4), Inches(0.3),
+                             size=9, color=sub_col, italic=True)
     else:
         bh = min(Inches(1.0), (ah - Inches(0.12) * (n-1)) / max(n, 1))
         bw = aw - Inches(0.6); xb = al + Inches(0.3)
@@ -66,13 +91,23 @@ def _render_architecture(sl, data, al, at, aw, ah, theme):
         nc = len(comps)
         cw = min(Inches(2.2), (ca_w - Inches(0.08)*(nc-1)) / max(nc, 1))
         ch = lh - Inches(0.22)
-        cgap = (ca_w - cw * nc) / max(nc - 1, 1)
+        if nc <= 2:
+            cgap = Inches(0.2)
+            ca_l = ca_l + (ca_w - cw * nc - Inches(0.2) * (nc - 1)) / 2
+        else:
+            cgap = (ca_w - cw * nc) / max(nc - 1, 1)
         for ci, comp in enumerate(comps):
             cx = ca_l + ci * (cw + cgap); cy = ly + Inches(0.11)
             rad = 0.40 if comp.get("type")=="cloud" else (0.30 if comp.get("type")=="cylinder" else 0.12)
             _rrect(sl, cx, cy, cw, ch, col, lc=C_ACCENT, lpt=0.75, rad=rad)
-            _txt(sl, comp.get("name",""), cx, cy+Inches(0.06), cw, ch-Inches(0.12),
+            name_h = Inches(0.32) if comp.get("description") else ch - Inches(0.12)
+            _txt(sl, comp.get("name",""), cx, cy+Inches(0.06), cw, name_h,
                  size=9, bold=True, color=C_WHITE, align=PP_ALIGN.CENTER)
+            if comp.get("description",""):
+                _txt(sl, comp["description"], cx+Inches(0.05), cy+Inches(0.38),
+                     cw-Inches(0.1), ch-Inches(0.44),
+                     size=8, color=RGBColor(0xCC,0xDD,0xFF),
+                     align=PP_ALIGN.CENTER, wrap=True)
 
 
 def _render_flowchart(sl, data, al, at, aw, ah, theme):
@@ -115,7 +150,7 @@ def _render_timeline(sl, data, al, at, aw, ah, theme):
     tc = C_TEXT if theme == "light" else C_WHITE
     mc = C_MUTED if theme == "light" else RGBColor(0xCC, 0xDD, 0xFF)
     STATUS = {"done":C_GREEN,"active":C_BLUE,"planned":C_MUTED}
-    iw = aw / n; sy = at + ah * 0.42
+    iw = aw / n; sy = at + ah * 0.35
     _rect(sl, al, sy - Inches(0.03), aw, Inches(0.06), C_ACCENT)
     for i, m in enumerate(ms):
         cx = al + i * iw + iw/2; dr = Inches(0.22)
@@ -129,13 +164,29 @@ def _render_timeline(sl, data, al, at, aw, ah, theme):
             _txt(sl, f"\u25b8 {dlv}", cx-iw/2+Inches(0.05), sy+dr+Inches(0.1)+di*Inches(0.34),
                  iw-Inches(0.1), Inches(0.3), size=9, color=tc)
 
+    # Summary bar — drawn ONCE after all milestones (NOT inside loop)
+    summary = data.get("summary", "")
+    if summary:
+        last_dlv_y = sy + Inches(0.22) + Inches(0.1) + 3 * Inches(0.34)
+        bar_y = last_dlv_y + Inches(0.2)
+        bar_h = (at + ah) - bar_y - Inches(0.1)
+        if bar_h > Inches(0.35):
+            bar_col = RGBColor(0x1A, 0x2A, 0x50) if theme == "dark" else RGBColor(0xE8, 0xF4, 0xFF)
+            txt_col = C_WHITE if theme == "dark" else C_BLUE
+            _rrect(sl, al, bar_y, aw, bar_h, bar_col, rad=0.05)
+            _txt(sl, f"★  {summary}", al + Inches(0.2), bar_y + Inches(0.06),
+                 aw - Inches(0.4), bar_h - Inches(0.12),
+                 size=10, color=txt_col, italic=True)
+
 
 def _render_comparison_table(sl, data, al, at, aw, ah, theme):
     headers = data.get("headers",[]); rows = data.get("rows",[])
     hi_col = data.get("highlight_col", 1)
     if not headers or not rows: return
     nc = len(headers); nr = len(rows)
-    rh = min(Inches(0.54), (ah - Inches(0.54)) / max(nr, 1)); cw = aw / nc
+    # Rows fill full available height
+    rh = (ah - Inches(0.54)) / max(nr, 1)
+    cw = aw / nc
     for ci, h in enumerate(headers):
         hc = C_BLUE if ci==0 else (C_ACCENT if ci==hi_col else C_MID)
         _rect(sl, al+ci*cw, at, cw-Inches(0.03), Inches(0.5), hc)
@@ -175,36 +226,37 @@ def _render_swot(sl, data, al, at, aw, ah, theme):
 
 
 def _render_kpi_cards(sl, data, al, at, aw, ah, theme):
-    """KPI cards: value (large) + title + label + optional description. Text-right icon."""
-    cards = data.get("cards",[]); n = min(len(cards), 5)
+    """KPI cards: value + title + label + description."""
+    cards = data.get("cards", []); n = min(len(cards), 5)
     if not n: return
-    gap = Inches(0.12); cw = (aw - gap*(n-1)) / n; ch = ah - Inches(0.06)
+    gap = Inches(0.12)
+    cw = (aw - gap*(n-1)) / n
+    max_desc = max((len(c.get("description","")) for c in cards), default=0)
+    ch = min(Inches(1.8) + Inches(0.01) * (max_desc // 20),
+             min(ah - Inches(0.06), Inches(2.6)))
     for i, card in enumerate(cards[:n]):
         cx = al + i*(cw+gap); col = _col(card.get("color","blue"))
         _rrect(sl, cx, at, cw, ch, col, rad=0.08)
-        # Value (large centred)
         val = card.get("value","")
         val_size = 34 if len(val) <= 4 else (28 if len(val) <= 6 else 22)
         _txt(sl, val, cx, at+Inches(0.18), cw, Inches(0.78),
              font="Calibri", size=val_size, bold=True, color=C_WHITE, align=PP_ALIGN.CENTER)
-        # Trend arrow (up/down) — top-right accent
         trend = card.get("trend", "")
         if trend in ("up", "down"):
             arrow = "▲" if trend == "up" else "▼"
             arrow_col = RGBColor(0x00,0xDD,0x88) if trend == "up" else RGBColor(0xFF,0x66,0x44)
             _txt(sl, arrow, cx + cw - Inches(0.4), at + Inches(0.1), Inches(0.35), Inches(0.35),
                  size=14, bold=True, color=arrow_col, align=PP_ALIGN.CENTER)
-        # Title
         _txt(sl, card.get("title",""), cx, at+Inches(1.0), cw, Inches(0.32),
              size=10, bold=True, color=C_WHITE, align=PP_ALIGN.CENTER)
-        # Label / subtitle
         _txt(sl, card.get("label",""), cx, at+Inches(1.34), cw, Inches(0.26),
              size=8, color=RGBColor(0xCC,0xDD,0xFF), align=PP_ALIGN.CENTER)
-        # Description (if provided) — small text at bottom
         desc = card.get("description","")
-        if desc and ch > Inches(1.8):
-            _txt(sl, desc, cx+Inches(0.1), at+Inches(1.62), cw-Inches(0.2),
-                 ch-Inches(1.68), size=8, color=RGBColor(0xCC,0xDD,0xFF),
+        desc_y = at + Inches(1.62)
+        desc_h = ch - Inches(1.68)
+        if desc and desc_h > Inches(0.2):
+            _txt(sl, desc, cx+Inches(0.1), desc_y, cw-Inches(0.2),
+                 desc_h, size=8, color=RGBColor(0xCC,0xDD,0xFF),
                  wrap=True, align=PP_ALIGN.CENTER)
 
 
@@ -232,48 +284,44 @@ def _render_two_column_cards(sl, data, al, at, aw, ah, theme):
 
 
 def _render_agenda(sl, data, al, at, aw, ah, theme):
-    """Modern numbered agenda cards — number badge left, title+subtitle right."""
+    """Modern numbered agenda cards — fills full slide height."""
     items = data.get("items",[]); n = len(items)
     if not n: return
     cols = 2; rows = math.ceil(n/cols)
     cw = (aw - Inches(0.2)) / cols; gap_h = Inches(0.1)
     ch_avail = (ah - gap_h * (rows - 1)) / max(rows, 1)
-    # Scale height to content
     max_sub = max((len(it.get("subtitle","")) for it in items[:8]), default=0)
+    # Cards fill available height — no fixed cap
     ch = min(max(Inches(0.82), Inches(0.82) + Inches(0.01) * (max_sub // 30)),
-             min(ch_avail, Inches(1.2)))
+             ch_avail)
     tc = C_TEXT if theme == "light" else C_WHITE
     sc = C_MUTED if theme == "light" else RGBColor(0xBB, 0xCC, 0xEE)
     bg = C_WHITE if theme == "light" else RGBColor(0x10, 0x20, 0x4A)
     bdr = C_MGRAY if theme == "light" else RGBColor(0x2A, 0x3A, 0x60)
-    # Left accent stripe on card
     STRIPE_COLS = [C_BLUE, C_TEAL, C_MID, RGBColor(0x1A,0x5C,0x8A),
                    C_ACCENT, C_BLUE, C_TEAL, C_MID]
     for i, item in enumerate(items[:8]):
         ci = i % cols; ri = i // cols
-        x = al + ci * (cw + Inches(0.2))
+        is_last_odd = (i == n - 1) and (n % 2 == 1)
+        card_w = aw if is_last_odd else cw
+        x = al if is_last_odd else al + ci * (cw + Inches(0.2))
         y = at + ri * (ch + gap_h)
-        # Card bg
-        _rrect(sl, x, y, cw, ch, bg, lc=bdr, lpt=0.5)
-        # Left color stripe (accent)
+        _rrect(sl, x, y, card_w, ch, bg, lc=bdr, lpt=0.5)
         stripe_col = STRIPE_COLS[i % len(STRIPE_COLS)]
         _rrect(sl, x, y, Inches(0.08), ch, stripe_col, rad=0.5)
-        # Number badge
         badge_r = Inches(0.22)
         _oval(sl, x + Inches(0.18), y + ch/2 - badge_r, badge_r*2, badge_r*2, stripe_col)
         _txt(sl, str(i+1), x + Inches(0.18), y + ch/2 - badge_r*0.8,
              badge_r*2, badge_r*1.6, size=11, bold=True, color=C_WHITE,
              align=PP_ALIGN.CENTER)
-        # Title
         title_y = y + Inches(0.1)
         _txt(sl, item.get("title",""), x + Inches(0.68), title_y,
-             cw - Inches(0.78), Inches(0.35),
+             card_w - Inches(0.78), Inches(0.35),
              size=12, bold=True, color=tc)
-        # Subtitle
         sub = item.get("subtitle","")
         if sub:
             _txt(sl, sub, x + Inches(0.68), title_y + Inches(0.36),
-                 cw - Inches(0.78), ch - Inches(0.46),
+                 card_w - Inches(0.78), ch - Inches(0.46),
                  size=9, color=sc, wrap=True)
 
 
@@ -281,7 +329,7 @@ def _render_pyramid(sl, data, al, at, aw, ah, theme):
     levels = data.get("levels",[]); n = len(levels)
     if not n: return
     COLS = [C_ACCENT, C_MID, C_BLUE, C_NAVY, RGBColor(0x00,0x08,0x28)]
-    lh = ah / n
+    lh = (ah - Inches(0.06) * (n - 1)) / max(n, 1)
     for i, level in enumerate(levels):
         factor = (i+1)/n
         lw = aw * factor; lx = al + (aw-lw)/2; ly = at + i*lh
@@ -316,24 +364,20 @@ def _render_cycle(sl, data, al, at, aw, ah, theme):
          size=10, bold=True, color=C_TEXT if theme=="light" else C_WHITE, align=PP_ALIGN.CENTER)
 
 
-
 def _render_hierarchy(sl, data, al, at, aw, ah, theme):
     root_label = data.get("root", "")
     nodes = data.get("nodes", [])
-    if not root_label and not nodes:
-        return
+    if not root_label and not nodes: return
     all_nodes = ([{"label": root_label, "color": "navy"}] if root_label else []) + nodes
     n = len(all_nodes)
-    if n == 0:
-        return
+    if n == 0: return
     cols_n = min(4, n)
     rows_n = math.ceil(n / cols_n)
     COLS = [C_NAVY, C_BLUE, C_MID, C_TEAL, RGBColor(0x1A, 0x5C, 0x8A)]
     cw = (aw - Inches(0.1) * (cols_n - 1)) / max(cols_n, 1)
     ch = min(Inches(0.8), (ah - Inches(0.1) * (rows_n - 1)) / max(rows_n, 1))
     for i, node in enumerate(all_nodes[:12]):
-        ci = i % cols_n
-        ri = i // cols_n
+        ci = i % cols_n; ri = i // cols_n
         x = al + ci * (cw + Inches(0.1))
         y = at + ri * (ch + Inches(0.1))
         col = _col(node.get("color", "blue")) if node.get("color") else COLS[i % len(COLS)]
@@ -349,8 +393,7 @@ def _render_hierarchy(sl, data, al, at, aw, ah, theme):
 
 def _render_roadmap(sl, data, al, at, aw, ah, theme):
     phases = data.get("phases", [])
-    if not phases:
-        return
+    if not phases: return
     mc = C_MUTED if theme == "light" else RGBColor(0xCC, 0xDD, 0xFF)
     COLS = [C_BLUE, C_MID, C_TEAL, RGBColor(0x1A, 0x5C, 0x8A), C_ACCENT]
     n = len(phases)
@@ -398,12 +441,10 @@ RENDERERS = {
 
 
 def place_visual(sl, visual, al, at, aw, ah, theme):
-    if not visual:
-        return
+    if not visual: return
     vtype = visual.get("type", "none")
     vdata = visual.get("data", {}) or {}
-    if not vtype or vtype == "none" or not vdata:
-        return
+    if not vtype or vtype == "none" or not vdata: return
     fn = RENDERERS.get(vtype)
     if fn:
         try:

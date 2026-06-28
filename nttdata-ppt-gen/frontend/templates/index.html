@@ -100,13 +100,13 @@
           <label class="form-label" for="duration">Presentation Duration <span class="req">*</span></label>
           <select id="duration" onchange="updateSlideCount()">
             <option value="">Select duration...</option>
-            <option value="5 Minutes|5-7">5 Minutes</option>
-            <option value="10 Minutes|8-10">10 Minutes</option>
-            <option value="15 Minutes|12-15">15 Minutes</option>
-            <option value="20 Minutes|15-18">20 Minutes</option>
-            <option value="30 Minutes|20-25">30 Minutes</option>
-            <option value="45 Minutes|28-35">45 Minutes</option>
-            <option value="60 Minutes|35-45">60 Minutes</option>
+            <option value="5 Minutes|5-7">5 Minutes (5–7 slides)</option>
+            <option value="10 Minutes|8-10">10 Minutes (8–10 slides)</option>
+            <option value="15 Minutes|12-15">15 Minutes (12–15 slides)</option>
+            <option value="20 Minutes|15-18">20 Minutes (15–18 slides)</option>
+            <option value="30 Minutes|20-25">30 Minutes (20–25 slides)</option>
+            <option value="45 Minutes|28-35">45 Minutes (28–35 slides)</option>
+            <option value="60 Minutes|35-45">60 Minutes (35–45 slides)</option>
           </select>
           <div class="slide-pill" id="slidePill">
             📊 Estimated: <span id="slideCountText">–</span>
@@ -149,8 +149,8 @@
   <div class="step-panel" id="step-panel-1">
 
     <div class="card">
-      <div class="section-label">Presenter &amp; Depth</div>
-      <div class="form-grid grid-3">
+      <div class="section-label">Preferences</div>
+      <div class="form-grid grid-2">
         <div class="form-group">
           <label class="form-label" for="techLevel">Technical Level</label>
           <select id="techLevel">
@@ -160,20 +160,6 @@
             <option>Expert</option>
             <option>Executive (Non-Technical)</option>
             <option>Mixed</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="presenterType">Presenter Type</label>
-          <select id="presenterType">
-            <option>Technical Consultant</option>
-            <option>Business Consultant</option>
-            <option>Solution Architect</option>
-            <option>Project Manager</option>
-            <option>Sales Executive</option>
-            <option>Delivery Manager</option>
-            <option>Business Analyst</option>
-            <option>Executive / CXO</option>
-            <option>Trainer</option>
           </select>
         </div>
         <div class="form-group">
@@ -201,30 +187,6 @@
           </label>
           <span class="toggle-label">Generate presenter notes for each slide</span>
         </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-label">Sections to Include <span style="font-weight:400;color:var(--ntt-muted);font-size:11px;text-transform:none;letter-spacing:0">(AI will intelligently select if none chosen)</span></div>
-      <div class="chip-group" id="sectionChips">
-        <div class="chip selected" onclick="toggleChip(this)" data-value="Agenda">Agenda</div>
-        <div class="chip selected" onclick="toggleChip(this)" data-value="Executive Summary">Executive Summary</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Problem Statement">Problem Statement</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Current Challenges">Current Challenges</div>
-        <div class="chip selected" onclick="toggleChip(this)" data-value="Proposed Solution">Proposed Solution</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Architecture">Architecture</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Workflow">Workflow</div>
-        <div class="chip selected" onclick="toggleChip(this)" data-value="Features">Features</div>
-        <div class="chip selected" onclick="toggleChip(this)" data-value="Benefits">Benefits</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Advantages">Advantages</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Limitations">Limitations</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Comparison">Comparison</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Best Practices">Best Practices</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Timeline / Roadmap">Timeline / Roadmap</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Cost Analysis">Cost Analysis</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Risks">Risks</div>
-        <div class="chip" onclick="toggleChip(this)" data-value="Future Enhancements">Future Enhancements</div>
-        <div class="chip selected" onclick="toggleChip(this)" data-value="Q&amp;A / Thank You">Q&amp;A / Thank You</div>
       </div>
     </div>
 

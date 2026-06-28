@@ -11,10 +11,9 @@ from backend.pptx_primitives import (
     SW, SH,
     CVR_LOGO_L, CVR_LOGO_T, CVR_LOGO_W, CVR_LOGO_H,
     CT_TTL_L, CT_TTL_T, CT_TTL_W, CT_TTL_H,
-    CA_L, CA_T, CA_W, CA_H,
-    FT_LOGO_T, FT_LOGO_L, FT_LOGO_W, FT_LOGO_H,
-    CL_LOGO_L, CL_LOGO_T, CL_LOGO_W, CL_LOGO_H,
-    footer, slide_title, notes,
+    FT_LOGO_T,
+    CL_LOGO_L, CL_LOGO_W, CL_LOGO_H,
+    footer,
 )
 from backend.pptx_renderers import place_visual, _render_agenda
 
@@ -123,12 +122,19 @@ def _info_cards(sl, items, theme, al, at, aw, ah, icon_labels=None):
             lbl = str(icon_labels[i])
         else:
             lbl = str(i + 1)
-        icon_r = Inches(0.22)
-        icon_cx = x + cw - icon_r - Inches(0.1)
+        icon_r = Inches(0.18)
+        icon_cx = x + cw - icon_r - Inches(0.12)
         icon_cy = y + ch / 2
-        _draw_icon_circle(sl, icon_cx, icon_cy, icon_r,
-                          RGBColor(0xFF, 0xFF, 0xFF),
-                          lbl, label_size=9)
+        icon_bg = RGBColor(0xFF, 0xFF, 0xFF)
+        icon_lbl_col = col
+        _oval(sl, icon_cx - icon_r, icon_cy - icon_r,
+              icon_r*2, icon_r*2, fill=icon_bg)
+        from pptx.enum.text import PP_ALIGN as _PA
+        _txt(sl, lbl,
+             icon_cx - icon_r, icon_cy - icon_r*0.9,
+             icon_r*2, icon_r*1.8,
+             size=9, bold=True, color=icon_lbl_col,
+             align=_PA.CENTER)
 
 
 # ── Build Cover (professional consulting layout) ─────────────────────────────
@@ -226,9 +232,11 @@ def build_two_column(sl, data, theme, num, total):
     visual = data.get("visual", {}) or {}
     bullets = [b for b in (data.get("bullets") or []) if b]
     has_visual = visual.get("type", "none") != "none" and visual.get("data")
-    if has_visual:
-        _bullets(sl, bullets, CONTENT_L, CONTENT_T, Inches(5.8), CONTENT_H, theme)
-        place_visual(sl, visual, Inches(6.3), CONTENT_T, Inches(6.6), CONTENT_H, theme)
+    if has_visual and bullets:
+        _bullets(sl, bullets, CONTENT_L, CONTENT_T, Inches(5.6), CONTENT_H, theme)
+        place_visual(sl, visual, Inches(6.1), CONTENT_T, Inches(6.8), CONTENT_H, theme)
+    elif has_visual and not bullets:
+        place_visual(sl, visual, CONTENT_L, CONTENT_T, CONTENT_W, CONTENT_H, theme)
     elif bullets:
         if len(bullets) <= 5:
             _info_cards(sl, bullets, theme, CONTENT_L, CONTENT_T, CONTENT_W, CONTENT_H)
@@ -243,14 +251,21 @@ def build_full_visual(sl, data, theme, num, total):
     _eyebrow(sl, data.get("section", ""), theme)
     _title(sl, data.get("title", ""), theme)
     bullets = [b for b in (data.get("bullets") or []) if b]
-    bh = Inches(0.34) if bullets else 0
-    vh = CONTENT_H - bh
-    place_visual(sl, data.get("visual", {}), CONTENT_L, CONTENT_T, CONTENT_W, vh, theme)
     if bullets:
-        tc = C_MUTED if theme == "light" else RGBColor(0xCC, 0xDD, 0xFF)
-        _txt(sl, "   |   ".join(bullets[:5]),
-             CONTENT_L, CONTENT_T + vh + Inches(0.02), CONTENT_W, Inches(0.3),
-             size=9, color=tc, align=PP_ALIGN.CENTER)
+        n_b = min(len(bullets), 4)
+        bh = Inches(0.38) * n_b
+        tc = C_TEXT if theme == "light" else C_WHITE
+        for bi, b in enumerate(bullets[:4]):
+            _txt(sl, f"▸  {b}",
+                 CONTENT_L, CONTENT_T + bi * Inches(0.36),
+                 CONTENT_W, Inches(0.34),
+                 size=11, color=tc)
+        place_visual(sl, data.get("visual", {}),
+                     CONTENT_L, CONTENT_T + bh + Inches(0.12),
+                     CONTENT_W, CONTENT_H - bh - Inches(0.12), theme)
+    else:
+        place_visual(sl, data.get("visual", {}),
+                     CONTENT_L, CONTENT_T, CONTENT_W, CONTENT_H, theme)
     footer(sl, theme, num, total)
 
 
@@ -263,14 +278,19 @@ def build_bullet_list(sl, data, theme, num, total):
     visual = data.get("visual", {}) or {}
     has_visual = visual.get("type", "none") != "none" and visual.get("data")
     if has_visual:
-        bh = CONTENT_H * 0.38
-        _bullets(sl, bullets, CONTENT_L, CONTENT_T, CONTENT_W, bh, theme, size=12)
-        place_visual(sl, visual, CONTENT_L, CONTENT_T + bh + Inches(0.08),
+        bh = CONTENT_H * 0.35 if bullets else 0
+        if bullets:
+            _bullets(sl, bullets, CONTENT_L, CONTENT_T,
+                     CONTENT_W, bh, theme, size=12)
+        place_visual(sl, visual,
+                     CONTENT_L, CONTENT_T + bh + Inches(0.08),
                      CONTENT_W, CONTENT_H - bh - Inches(0.08), theme)
     elif len(bullets) <= 5 and bullets:
-        _info_cards(sl, bullets, theme, CONTENT_L, CONTENT_T, CONTENT_W, CONTENT_H)
+        _info_cards(sl, bullets, theme,
+                    CONTENT_L, CONTENT_T, CONTENT_W, CONTENT_H)
     else:
-        _bullets(sl, bullets, CONTENT_L, CONTENT_T, CONTENT_W, CONTENT_H, theme, size=13)
+        _bullets(sl, bullets, CONTENT_L, CONTENT_T,
+                 CONTENT_W, CONTENT_H, theme, size=13)
     footer(sl, theme, num, total)
 
 

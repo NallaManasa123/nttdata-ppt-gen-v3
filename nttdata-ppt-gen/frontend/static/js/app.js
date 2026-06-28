@@ -67,17 +67,15 @@
   function buildConfig() {
     const durEl = document.getElementById("duration");
     return {
-      topic:          document.getElementById("topic").value.trim(),
-      objective:      getSelectVal("objective"),
-      audience:       getSelectVal("audience"),
-      duration:       durEl.options[durEl.selectedIndex]?.text || "",
-      slide_range:    durEl.value ? durEl.value.split("|")[1] : "12-15",
-      presenter_type: document.getElementById("presenterType")?.value || "Technical Consultant",
-      tech_level:     document.getElementById("techLevel")?.value || "Advanced",
-      theme:          selectedTheme,
-      language:       document.getElementById("language")?.value || "English",
-      speaker_notes:  document.getElementById("speakerNotes")?.checked || false,
-      sections:       getChips("sectionChips"),
+      topic:         document.getElementById("topic").value.trim(),
+      objective:     getSelectVal("objective"),
+      audience:      getSelectVal("audience"),
+      duration:      durEl.options[durEl.selectedIndex]?.text || "",
+      slide_range:   durEl.value ? durEl.value.split("|")[1] : "12-15",
+      tech_level:    document.getElementById("techLevel")?.value || "Advanced",
+      theme:         selectedTheme,
+      language:      document.getElementById("language")?.value || "English",
+      speaker_notes: document.getElementById("speakerNotes")?.checked || false,
     };
   }
 
