@@ -1,16 +1,12 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import Response, JSONResponse
+from fastapi.responses import Response, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-import io
 import json
 import traceback
 import os
 import sys
 
-# Lazy path setup — the Python Agent clones the repo and sets CWD
-# so all backend.* imports resolve correctly
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 app = FastAPI()
 
@@ -19,7 +15,7 @@ app = FastAPI()
 def _parse_config(config: dict) -> dict:
     duration_raw = config.get("duration", "15 Minutes")
     if "|" in duration_raw:
-        parts = config["duration"].split("|", 1)
+        parts = duration_raw.split("|", 1)
         config["duration"]    = parts[0].strip()
         config["slide_range"] = parts[1].strip()
     else:
@@ -106,17 +102,14 @@ async def preview(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-# ── frontend static serving ────────────────────────────────────────────────
+# ── frontend ───────────────────────────────────────────────────────────────
 
-BASE_DIR = os.path.dirname(__file__)
-
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "frontend", "templates"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @app.get("/")
-async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def index():
+    return FileResponse(os.path.join(BASE_DIR, "frontend", "templates", "index.html"))
 
-# Mount static assets (CSS, JS, images)
 app.mount(
     "/static",
     StaticFiles(directory=os.path.join(BASE_DIR, "frontend", "static")),
