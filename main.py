@@ -1,16 +1,51 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import Response, JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-import json
-import traceback
 import os
 import sys
+import json
+import base64
+import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-app = FastAPI()
+def handle_message(msg, node_id=None):
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
 
-# ── helpers ────────────────────────────────────────────────────────────────
+        config = msg.get("payload", {})
+        if not config:
+            msg["payload"] = {"error": "No configuration provided"}
+            return msg
+
+        required = ["topic", "objective", "audience", "duration"]
+        missing  = [f for f in required if not config.get(f)]
+        if missing:
+            msg["payload"] = {"error": f"Missing required fields: {', '.join(missing)}"}
+            return msg
+
+        config = _parse_config(config)
+
+        from backend.llm import generate_presentation_plan
+        from backend.pptx_builder import build_pptx
+
+        plan       = generate_presentation_plan(config)
+        theme      = config.get("theme", "light")
+        pptx_bytes = build_pptx(plan, theme=theme)
+
+        topic_slug = config["topic"][:40].replace(" ", "_").replace("/", "-")
+        filename   = f"NTT_DATA_{topic_slug}.pptx"
+
+        msg["payload"] = {
+            "status":   "success",
+            "filename": filename,
+            "pptx_b64": base64.b64encode(pptx_bytes).decode("utf-8")
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        msg["payload"] = {"error": str(e)}
+
+    return msg
+
 
 def _parse_config(config: dict) -> dict:
     duration_raw = config.get("duration", "15 Minutes")
@@ -37,81 +72,3 @@ def _parse_config(config: dict) -> dict:
     config["visuals"]       = config.get("visuals",      ["Automatically Decide"])
 
     return config
-
-
-# ── routes ─────────────────────────────────────────────────────────────────
-
-@app.get("/api/health")
-async def health():
-    return JSONResponse({"status": "ok", "service": "NTT DATA AI Presentation Generator"})
-
-
-@app.post("/api/generate")
-async def generate(request: Request):
-    try:
-        from backend.llm import generate_presentation_plan
-        from backend.pptx_builder import build_pptx
-
-        config = await request.json()
-        if not config:
-            return JSONResponse({"error": "No configuration provided"}, status_code=400)
-
-        required = ["topic", "objective", "audience", "duration"]
-        missing  = [f for f in required if not config.get(f)]
-        if missing:
-            return JSONResponse({"error": f"Missing required fields: {', '.join(missing)}"}, status_code=400)
-
-        config     = _parse_config(config)
-        plan       = generate_presentation_plan(config)
-        theme      = config.get("theme", "light")
-        pptx_bytes = build_pptx(plan, theme=theme)
-
-        topic_slug = config["topic"][:40].replace(" ", "_").replace("/", "-")
-        filename   = f"NTT_DATA_{topic_slug}.pptx"
-
-        return Response(
-            content=pptx_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-        )
-
-    except ValueError as e:
-        return JSONResponse({"error": str(e)}, status_code=400)
-    except json.JSONDecodeError as e:
-        return JSONResponse({"error": f"LLM returned invalid JSON: {e}"}, status_code=500)
-    except Exception as e:
-        traceback.print_exc()
-        return JSONResponse({"error": f"Internal error: {str(e)}"}, status_code=500)
-
-
-@app.post("/api/preview")
-async def preview(request: Request):
-    try:
-        from backend.llm import generate_presentation_plan
-
-        config = await request.json()
-        if not config:
-            return JSONResponse({"error": "No configuration provided"}, status_code=400)
-
-        config = _parse_config(config)
-        plan   = generate_presentation_plan(config)
-        return JSONResponse({"success": True, "plan": plan})
-
-    except Exception as e:
-        traceback.print_exc()
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
-# ── frontend ───────────────────────────────────────────────────────────────
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-@app.get("/")
-async def index():
-    return FileResponse(os.path.join(BASE_DIR, "frontend", "templates", "index.html"))
-
-app.mount(
-    "/static",
-    StaticFiles(directory=os.path.join(BASE_DIR, "frontend", "static")),
-    name="static"
-)
