@@ -9,20 +9,30 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-# Path fix — try all possible locations
-_HERE   = os.path.dirname(os.path.abspath(__file__))
-_PARENT = os.path.dirname(_HERE)
-_CWD    = os.getcwd()
+# Path fix — repo is cloned into a subfolder
+_CWD = os.getcwd()
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
-for _p in [_HERE, _PARENT, _CWD, os.path.join(_CWD, 'src')]:
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
+# Find the subfolder that contains 'backend'
+_REPO_ROOT = None
+for _candidate in [_CWD, _HERE]:
+    # Check direct
+    if os.path.isdir(os.path.join(_candidate, 'backend')):
+        _REPO_ROOT = _candidate
+        break
+    # Check one level down (subfolder)
+    for _sub in os.listdir(_candidate):
+        _subpath = os.path.join(_candidate, _sub)
+        if os.path.isdir(_subpath) and os.path.isdir(os.path.join(_subpath, 'backend')):
+            _REPO_ROOT = _subpath
+            break
+    if _REPO_ROOT:
+        break
 
-# Debug — print where we are and what's around us
-print(f"CWD: {_CWD}", flush=True)
-print(f"HERE: {_HERE}", flush=True)
-print(f"CWD contents: {os.listdir(_CWD)}", flush=True)
-print(f"HERE contents: {os.listdir(_HERE)}", flush=True)
+print(f"REPO_ROOT found: {_REPO_ROOT}", flush=True)
+
+if _REPO_ROOT and _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 # Startup probe
 try:
@@ -42,6 +52,15 @@ except Exception as e:
 
 
 def handle_message(msg, node_id=None):
+    # Re-run path fix inside handler too
+    _CWD2 = os.getcwd()
+    for _sub in os.listdir(_CWD2):
+        _subpath = os.path.join(_CWD2, _sub)
+        if os.path.isdir(_subpath) and os.path.isdir(os.path.join(_subpath, 'backend')):
+            if _subpath not in sys.path:
+                sys.path.insert(0, _subpath)
+            break
+
     try:
         from dotenv import load_dotenv
         load_dotenv()
