@@ -37,7 +37,7 @@ def _call_groq(system: str, user: str, max_tokens: int = 7000,
         client = Groq(api_key=key)
     else:
         client = get_client()
-    model = model_override or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    model = model_override or os.getenv("GROQ_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
     resp  = client.chat.completions.create(
         model=model,
         messages=[
