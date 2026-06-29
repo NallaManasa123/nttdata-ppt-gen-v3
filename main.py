@@ -3,21 +3,26 @@ import sys
 import json
 import base64
 import traceback
-
-# Windows-safe path fix
-_HERE = os.path.dirname(os.path.abspath(__file__))
-if _HERE not in sys.path:
-    sys.path.insert(0, _HERE)
-
-# Also add parent directory as fallback
-_PARENT = os.path.dirname(_HERE)
-if _PARENT not in sys.path:
-    sys.path.insert(0, _PARENT)
+import io
 
 # Windows encoding fix
-import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+# Path fix — try all possible locations
+_HERE   = os.path.dirname(os.path.abspath(__file__))
+_PARENT = os.path.dirname(_HERE)
+_CWD    = os.getcwd()
+
+for _p in [_HERE, _PARENT, _CWD, os.path.join(_CWD, 'src')]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+# Debug — print where we are and what's around us
+print(f"CWD: {_CWD}", flush=True)
+print(f"HERE: {_HERE}", flush=True)
+print(f"CWD contents: {os.listdir(_CWD)}", flush=True)
+print(f"HERE contents: {os.listdir(_HERE)}", flush=True)
 
 # Startup probe
 try:
