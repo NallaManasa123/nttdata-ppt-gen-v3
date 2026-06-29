@@ -37,7 +37,7 @@ def _call_groq(system: str, user: str, max_tokens: int = 7000,
         client = Groq(api_key=key)
     else:
         client = get_client()
-    model = model_override or os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    model = model_override or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     resp  = client.chat.completions.create(
         model=model,
         messages=[
@@ -235,7 +235,7 @@ MANDATORY REQUIREMENTS:
 8. Avoid generic slide titles like "Introduction" or "Overview" — use specific, topic-relevant titles
 9. Mark density_check as "full" only when the slide will use the complete content area"""
 
-    raw = _call_groq(STAGE1_SYSTEM, user_msg, max_tokens=4000)
+    raw = _call_groq(STAGE1_SYSTEM, user_msg, max_tokens=2000)
     return json.loads(_clean_json(raw))
 
 
@@ -439,7 +439,7 @@ A fundamentals slide → FUNDAMENTALS. A final recap → SUMMARY or KEY_TAKEAWAY
 VISUAL DECISION for each slide: ask "is a diagram better?" — if yes, provide FULL diagram data.
 If bullets AND visual both exist on same slide, ensure visual is RICHER than the bullets alone."""
 
-    raw = _call_groq(STAGE2_SYSTEM, user_msg, max_tokens=7500,
+    raw = _call_groq(STAGE2_SYSTEM, user_msg, max_tokens=4000,
                      use_secondary=True)
     return json.loads(_clean_json(raw))
   
