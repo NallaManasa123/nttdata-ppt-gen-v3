@@ -4,9 +4,22 @@ import json
 import base64
 import traceback
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Windows-safe path fix
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
 
-# ── Startup probe ──────────────────────────────────────────────────────────
+# Also add parent directory as fallback
+_PARENT = os.path.dirname(_HERE)
+if _PARENT not in sys.path:
+    sys.path.insert(0, _PARENT)
+
+# Windows encoding fix
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+# Startup probe
 try:
     print("Step 1: dotenv...", flush=True)
     from dotenv import load_dotenv
@@ -15,15 +28,13 @@ try:
     from backend.llm import generate_presentation_plan
     print("Step 3: pptx_builder...", flush=True)
     from backend.pptx_builder import build_pptx
-    print("Step 4: pptx_primitives...", flush=True)
-    from backend.pptx_primitives import notes, SW, SH
-    print("Step 5: pptx_slides...", flush=True)
+    print("Step 4: pptx_slides...", flush=True)
     from backend.pptx_slides import LAYOUT_MAP
-    print("✅ ALL IMPORTS OK", flush=True)
+    print("ALL IMPORTS OK", flush=True)
 except Exception as e:
-    print(f"❌ CRASHED AT: {e}", flush=True)
+    print(f"CRASHED AT: {e}", flush=True)
     traceback.print_exc()
-# ──────────────────────────────────────────────────────────────────────────
+
 
 def handle_message(msg, node_id=None):
     try:
@@ -55,6 +66,7 @@ def handle_message(msg, node_id=None):
         traceback.print_exc()
         msg["payload"] = {"error": str(e)}
     return msg
+
 
 def _parse_config(config: dict) -> dict:
     duration_raw = config.get("duration", "15 Minutes")
