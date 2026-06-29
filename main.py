@@ -8,19 +8,20 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # ── Startup probe ──────────────────────────────────────────────────────────
 try:
+    print("Step 1: dotenv...", flush=True)
     from dotenv import load_dotenv
     load_dotenv()
-    print("✅ dotenv OK", flush=True)
+    print("Step 2: llm...", flush=True)
     from backend.llm import generate_presentation_plan
-    print("✅ llm OK", flush=True)
+    print("Step 3: pptx_builder...", flush=True)
     from backend.pptx_builder import build_pptx
-    print("✅ pptx_builder OK", flush=True)
-    from backend.pptx_slides import LAYOUT_MAP
-    print("✅ pptx_slides OK", flush=True)
+    print("Step 4: pptx_primitives...", flush=True)
     from backend.pptx_primitives import notes, SW, SH
-    print("✅ pptx_primitives OK", flush=True)
-except Exception as _startup_err:
-    print(f"❌ STARTUP FAILED: {_startup_err}", flush=True)
+    print("Step 5: pptx_slides...", flush=True)
+    from backend.pptx_slides import LAYOUT_MAP
+    print("✅ ALL IMPORTS OK", flush=True)
+except Exception as e:
+    print(f"❌ CRASHED AT: {e}", flush=True)
     traceback.print_exc()
 # ──────────────────────────────────────────────────────────────────────────
 
